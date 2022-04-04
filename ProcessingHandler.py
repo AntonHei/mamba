@@ -14,6 +14,7 @@ class ProcessingHandler():
         401: "Unauthorized",
         403: "Forbidden",
         404: "Not Found",
+        500: "Internal Server Error",
     }
 
     # Instances
@@ -21,6 +22,7 @@ class ProcessingHandler():
 
     # Runtime Variables
     l_socket = None
+    force_status_code = None
 
     def __init__(self):
         self.headerHandler = HeaderHandler()
@@ -41,8 +43,14 @@ class ProcessingHandler():
 
         return filePath
 
+    def setForceStatusCode(self, status_code):
+        self.force_status_code = status_code
+
     def getResponseStatusCode(self, r):
         file_path = self.getRequestedFilePath(r)
+
+        if self.force_status_code is not None:
+            return self.force_status_code
 
         if file_path:
             exists = self.fileHandler.doesFileExist(file_path)
@@ -79,11 +87,12 @@ class ProcessingHandler():
 
     def buildResponse(self, r):
         self.validateRequest(r)
-        self.executeRequest(r)
+        if self.getResponseStatusCode(r) == 200:
+            self.executeRequest(r)
 
-        # Build Head/Body
-        head = self.getResponseHead(r)
+        # Build Head/Body; Needs to be done backwards
         body = self.getResponseBody(r)
+        head = self.getResponseHead(r)
 
         response = head + gzip.compress(body)
 
@@ -124,6 +133,9 @@ class ProcessingHandler():
         else:
             body = self.fileHandler.loadRequestedFile(requested_file_path)
 
+            if body is None:
+                self.setForceStatusCode(500)
+
         r.setResponseBody(body)
 
     def getResponseBody(self, r):
@@ -138,6 +150,8 @@ class ProcessingHandler():
         if http_status_code == 200:
             body = r.getResponseBody()
         else:
+            r.addCustomResponseHeader('content-type', 'text/html; charset=utf-8')
+
             body = f'<!DOCTYPE html>\n' \
             f'<html>\n' \
             f'<head>\n' \

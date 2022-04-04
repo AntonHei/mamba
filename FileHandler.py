@@ -1,7 +1,6 @@
 import os
 import magic
 import subprocess
-import php
 
 class FileHandler():
 
@@ -93,8 +92,11 @@ class FileHandler():
         fileContent = None
         if self.doesFileExist(file_name):
             filePath = self.getFilePath(file_name)
-            fileStream = open(filePath, "rb")
-            fileContent = fileStream.read()
-            fileStream.close()
+            try:
+                fileStream = open(filePath, "rb")
+                fileContent = fileStream.read()
+                fileStream.close()
+            except PermissionError:
+                return None
 
         return fileContent

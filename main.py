@@ -12,6 +12,7 @@ print("---------------------------")
 def waitForConnections():
 
     while True:
+        processingHandler.reset()
         # Receive Request
         client_connection, r_data = requestHandler.waitForRequest()
 

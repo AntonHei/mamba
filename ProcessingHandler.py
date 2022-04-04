@@ -28,6 +28,11 @@ class ProcessingHandler():
         self.headerHandler = HeaderHandler()
         self.fileHandler = FileHandler()
 
+    def reset(self):
+        # Clear
+        self.l_socket = None
+        self.force_status_code = None
+
     def getRequestedFilePath(self, r):
         filePath = None
 

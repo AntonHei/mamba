@@ -1,4 +1,5 @@
 import socket
+from ConfigHandler import ConfigHandler
 
 class RequestHandler():
 
@@ -9,13 +10,24 @@ class RequestHandler():
 
     l_socket = None
 
+    # Instances
+    configHandler = None
+
+    def __init__(self):
+        self.configHandler = ConfigHandler()
+
     def start(self):
+        socketConfigData = self.configHandler.getConfigData("socket")
+
+        hostname = socketConfigData["hostname"]
+        port = socketConfigData["port"]
+
         self.l_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.l_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.l_socket.bind((self.socket_hostname, self.socket_port))
+        self.l_socket.bind((hostname, int(port)))
         self.l_socket.listen(1)
 
-        print('Listening on {:s}:{:s}'.format(str(self.socket_hostname), str(self.socket_port)))
+        print('Listening on {:s}:{:s}'.format(str(hostname), str(port)))
 
     def waitForRequest(self):
         client_connection, client_address = self.l_socket.accept()

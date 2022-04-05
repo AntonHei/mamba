@@ -17,7 +17,11 @@ class HeaderHandler():
 
         http_version = General.getHTTPVersion()
 
-        file_mimetype = self.fileHandler.getFileMimeTypeForHeader(file_path)
+        # If File is found use file mime type otherwise default to text/html
+        if processingHandler.getResponseStatusCode(r) == 200:
+            file_mimetype = self.fileHandler.getFileMimeTypeForHeader(file_path)
+        else:
+            file_mimetype = "text/html"
 
         defaultHeaders = {
             f'Connection': f'Keep-Alive',

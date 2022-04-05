@@ -1,12 +1,11 @@
 import gzip
 
-from FileHandler import FileHandler
 from General import General
+from ConfigHandler import ConfigHandler
+from FileHandler import FileHandler
 from HeaderHandler import HeaderHandler
 
-
 class ProcessingHandler():
-    indexFileName = "index.html"
 
     http_status_codes_texts = {
         200: "OK",
@@ -19,14 +18,17 @@ class ProcessingHandler():
 
     # Instances
     fileHandler = None
+    configHandler = None
+    headerHandler = None
 
     # Runtime Variables
     l_socket = None
     force_status_code = None
 
     def __init__(self):
-        self.headerHandler = HeaderHandler()
+        self.configHandler = ConfigHandler()
         self.fileHandler = FileHandler()
+        self.headerHandler = HeaderHandler()
 
     def reset(self):
         # Clear
@@ -42,7 +44,19 @@ class ProcessingHandler():
 
             isFolder = self.fileHandler.isFolder(r_file)
             if isFolder:
-                filePath = r_file + "/" + self.indexFileName
+                directoryIndexData = self.configHandler.getConfigData("directoryindex")
+
+                directoryIndex_basename = directoryIndexData["filename"]
+                directoryIndex_extensions = directoryIndexData["extensions"]
+
+                for extension in directoryIndex_extensions:
+                    filePath = r_file + "/" + directoryIndex_basename + "." + extension
+                    if self.fileHandler.doesFileExist(filePath) is True:
+                        break
+
+                if self.fileHandler.doesFileExist(filePath) is False:
+                    filePath = r_file + "/"
+
             else:
                 filePath = r_file
 
@@ -52,19 +66,25 @@ class ProcessingHandler():
         self.force_status_code = status_code
 
     def getResponseStatusCode(self, r):
-        file_path = self.getRequestedFilePath(r)
+        filename = self.getRequestedFilePath(r)
 
         if self.force_status_code is not None:
             return self.force_status_code
 
-        if file_path:
-            exists = self.fileHandler.doesFileExist(file_path)
-            if exists:
-                canAccess = self.fileHandler.canAccessFile(file_path)
-                if not canAccess:
-                    return 501
+        if filename:
+            isFolder = self.fileHandler.isFolder(filename)
+
+            if isFolder is False:
+                exists = self.fileHandler.doesFileExist(filename)
+                if exists:
+                    canAccess = self.fileHandler.canAccessFile(filename)
+                    if not canAccess:
+                        return 501
+                else:
+                    return 404
             else:
                 return 404
+
         else:
             return 400
 

@@ -1,8 +1,10 @@
 from RequestHandler import RequestHandler
 from ProcessingHandler import ProcessingHandler
+from ConfigHandler import ConfigHandler
 from Request import Request
 
 # Init
+configHandler = ConfigHandler()
 requestHandler = RequestHandler()
 processingHandler = ProcessingHandler()
 
@@ -32,7 +34,10 @@ def waitForConnections():
         http_response_status_code_text = processingHandler.getResponseStatusText(http_response_status_code)
 
         file_path = processingHandler.getRequestedFilePath(request)
-        file_mimetype = processingHandler.fileHandler.getFileMimeTypeForHeader(file_path)
+        if processingHandler.getResponseStatusCode(request) == 200:
+            file_mimetype = processingHandler.fileHandler.getFileMimeTypeForHeader(file_path)
+        else:
+            file_mimetype = "text/html"
 
         print(str(http_response_status_code) + " - " + http_response_status_code_text + " - " + str(file_mimetype))
         print()
